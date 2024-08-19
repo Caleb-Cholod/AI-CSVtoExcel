@@ -11,6 +11,9 @@ pyqt5 - pip install pyqt5
 Usage:
 Place new CSV files into the NewCSV folder
 Double click the main.py program
+Number of CSV Files are shown, if the number is correct then click the combine files into spreadsheet button
+Warnings/Errors are displayed in terminal
+
 
 Warnings:
 Make sure master sheet is titled Sheet1, and make sure files are properly closed on system
