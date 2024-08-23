@@ -9,95 +9,27 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 from tkinter.font import Font
-
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import (
-    QApplication,
-    QHBoxLayout,
-    QLabel,
-    QMainWindow,
-    QPushButton,
-    QStackedLayout,
-    QVBoxLayout,
-    QWidget,
-    QCheckBox,
-    QComboBox,
-    QDoubleSpinBox,
-    QLineEdit,
-    QListWidget,
-    QSlider,
-    QSpinBox,
-)
-from PyQt5.QtGui import QPalette, QColor
+import time
 from functools import partial
 
 
 #=====INTRO===========
 #Written in python by Caleb C
 #Program to take multiple csv files from the integritest system
-#and generate an excel file while deleting failiure tests.
-
-#The program must be able to handle multiple CSV files put into
-#the "NewCSV" folder and will move the added csv files into the
-#"UsedCSV" folder
-
-#The program will create a spreadsheet based on lot number, and should check
-#that lot# doesnt exist
-#The program will also add passed tests into a master sheet
+#and generate excel files while deleting failiure tests.
+#The program moves lot number excel files and used csv files into the shared strainrite sky folder
+#Dependencies include tkinter, openpyxl, and shutil
 
 
-#=====PYQT5 CLASSES==========
-'''
-class MainWindow(QMainWindow):
-    def __init__(self):
-
-        super(MainWindow, self).__init__()
-
-        self.setWindowTitle("My App")
-
-        pagelayout = QVBoxLayout()
-
-        but1 = QPushButton("Press Me!")
-        
-
-        widget = QLabel("Hello")
-        font = widget.font()
-        font.setPointSize(30)
-        widget.setFont(font)
-        widget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-
-        self.setCentralWidget(widget)
-        
-    def activate_tab_1(self):
-        self.stacklayout.setCurrentIndex(0)
-
-    def activate_tab_2(self):
-        self.stacklayout.setCurrentIndex(1)
-
-    def activate_tab_3(self):
-        self.stacklayout.setCurrentIndex(2)
-
-
-class Color(QWidget):
-
-    def __init__(self, color):
-        super(Color, self).__init__()
-        self.setAutoFillBackground(True)
-
-        palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(color))
-        self.setPalette(palette)
-'''
 #=====FILE NAME CONSTANTS=====
 
 WB_COPY = 'master(Copy).xlsx'
+FILES = 'CSVFiles'
 USED_FILES = 'UsedCSVFiles'
 LOTS = 'LotNumber'
+BACKUPS = 'Backups'
 
-
-#x = open(r'\\sky\strainrite\AIT Reports\424374.xlsx', 'r')
-#SKY_LOCATION = '\\sky\strainrite\AIT Reports'
+SKY_LOCATION = r'\\sky\strainrite\AIT Reports'
 
 #=====HELPER FUNCTIONS=====
 
@@ -118,9 +50,10 @@ def deleteLots():
 def oldToNew():
     #Copy files
     print("Moving Old CSV Files...")
-    destination = "CSVFiles"
+    destination = FILES
     files = listdir(USED_FILES)
     for file in files:
+        
         files_ = listdir(USED_FILES+"/"+file)
         for i in range(len(files_)):
             location = USED_FILES+"/"+file+"/"+files_[i]
@@ -130,14 +63,25 @@ def oldToNew():
     for file in files:
         shutil.rmtree(USED_FILES+"/"+file)
 
+    #Change label
+    num = listdir(FILES)
+    change_label_text(len(num))
+
+def copytree(src, dst, symlinks=False, ignore=None):
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            print(s, d)
+
     
-
-
 
 #=====ERROR/WARNING MESSAGES=====
 def printError(index):
     if(index == 0):
-        print("ERROR 01: Same Lot number and same Serial number")
+        print("ERROR 01: Same Lot number and same Serial number found")
 
 def printWarning(index):
     if(index == 0):
@@ -145,13 +89,14 @@ def printWarning(index):
     elif(index == 1):
         print("WARNING 02: Duplicate lot numbers in data")
     elif(index == 2):
-        print("WARNING 03: No CSVs in CSVFiles, check folder")
+        print("WARNING 03: No CSVs in CSVFiles, check AI_Excel>CSVFiles")
         
+    
 
 #=====MAIN============
 def main():
     #Find CSV file(s)
-    files = listdir("CSVFiles")
+    files = listdir(FILES)
     if(len(files) == 0):
         printWarning(2)
 
@@ -173,8 +118,8 @@ def main():
     lotRowCount = 2
     
     for index in range(len(files)):
-        print("Opening CSV File #", index, "...")
-        file = open("CSVFiles/" + files[index], "r")
+        print("Opening CSV File #", index+1, "...")
+        file = open(FILES + "/" + files[index], "r")
         #Lot File Variables
         uniqueCSVS = []
         for line in (file):
@@ -233,7 +178,6 @@ def main():
                     break
                     
                 for i in (range(len(entry))):
-                    #print(entry[6])
                     #If we failed our diffusion teset rate in G, dont add this row.
                     if(float(entry[6]) <= 0.1):
                         print("    -failed diffusion test at entry", lineIncrement)
@@ -287,14 +231,14 @@ def main():
         
         if(os.path.exists(USED_FILES+"/"+CSVfileName)):
             #Add CSV into our CSV Folder
-            os.rename("CSVFiles/"+files[index], USED_FILES+"/"+CSVfileName+'/'+files[index])
+            os.rename(FILES+"/"+files[index], USED_FILES+"/"+CSVfileName+'/'+files[index])
 
         else:
             pass
             #Create a new CSV Folder
             os.mkdir(USED_FILES+"/"+CSVfileName)
             #Add CSV into our CSV folder
-            os.rename("CSVFiles/"+files[index], USED_FILES+"/"+CSVfileName+'/'+files[index])
+            os.rename(FILES+"/"+files[index], USED_FILES+"/"+CSVfileName+'/'+files[index])
             
 
     #Copy Workbook to a working copy
@@ -302,64 +246,86 @@ def main():
     csvs = listdir(LOTS)
     for csv in (csvs):
         location = LOTS + "/" + csv
-        destination = "Backups/" + csv
+        destination = BACKUPS + "/" + csv
         shutil.copyfile(location, destination)
 
-#=====PYQT5================
-'''
-app = QApplication(sys.argv)
+    
+    #Overwrite files in the strainrite shared folder location 
+    for csv in (csvs):
+        location = LOTS + "/" + csv
+        destination = SKY_LOCATION + '\\LotNumber\\' + csv 
+        shutil.copy(location, destination)
 
-window = MainWindow()
-window.show()
 
-app.exec()
+    #Overwrite CSV files in the strainrite shared folder location
+    files = listdir(USED_FILES)
+    for csv in (files):
+        location = USED_FILES + "/" + csv
+        destination = SKY_LOCATION + '\\CSVFiles\\' + csv 
+        shutil.copytree(location, destination, dirs_exist_ok=True)
 
-'''
+    #Save backup into strainrite shared folder
+        
+
+
+    #Change csv count to be 0
+    change_label_text(0)
+
+    #Finished
+    print("Done")
+
+
+
+    
 #=====Tkinter Window=======
 root = Tk()
 root.title("Integrity CSV to Excel Tool")
-root.geometry('400x500')
+root.geometry('375x400')
 root.resizable(False, False)
-#root.iconbitmap('./image.png')
 root.configure(background='lightgray')
 frm = ttk.Frame(root, padding=60)
 frm.grid()
 
-numfiles_ = str(len(listdir("CSVFiles"))) + " Files were found."
 
-#Refresh Number of Files Text
-def refresh():
-    print("refreshing")
-    global numfiles_
-    label_.config(text=numfiles_)
-
-    
 #Fonts
 myfont = Font(family="Verdana", size=10)
 
+#Labels
+numfiles = str(len(listdir(FILES))) + " Files were found in AI_Excel>CSVFiles"
+label_ = ttk.Label(frm, text=numfiles, font=myfont)
+label_.grid(column=0, row=3, ipadx=0, ipady=5)
+
+#TKinter Helper Functions
+def change_label_text(num):
+    label_.config(text=str(num)+" Files were found in AI_Excel>CSVFiles")
+
+
+def refresh():
+    num = listdir(FILES)
+    change_label_text(len(num))
+
+    
+
 refreshImg = tk.PhotoImage(file='./refresh_.png')
-smaller = refreshImg.subsample(3, 3)
-#refresh = ttk.Button(frm, command=refresh, image=smaller).grid(column = 0, row=4, padx=0)
+smaller = refreshImg.subsample(4, 4)
+refresh = ttk.Button(frm, command=refresh, image=smaller)
+refresh.grid(column = 0, row=4, padx=0)
 
 
-#Buttons Labels
+#TKinter Buttons
 ttk.Button(frm, text="Combine files into spreadsheet", command=main).grid(column=0, row=2, padx=5, pady=20, columnspan=5, ipadx=15, ipady=15)
-numfiles = str(len(listdir("CSVFiles"))) + " Files were found."
-label_ = ttk.Label(frm, text=numfiles, font=myfont).grid(column=0, row=3, ipadx=5, ipady=5)
-
-
 ttk.Button(frm, text="Quit", command=root.destroy).grid(column=0, row=12)
-ttk.Button(frm, text="Move Old CSV to new CSV folder", command=oldToNew).grid(column=0, row=6, pady=0, ipadx=0, ipady=0)
-#ttk.Button(frm, text="Delete master.xlsx Data", command=resetMaster).grid(column=0, row=6, ipadx=0, ipady=0)
-ttk.Button(frm, text="Delete Lot Number Files", command=deleteLots).grid(column=0, row=7, ipadx=0, ipady=0)
-ttk.Label(frm, text="==========Debugging Tools===========").grid(column=0, row=5, ipadx=15, ipady=20)
+#ttk.Button(frm, text="Move Old CSV to new CSV folder", command=oldToNew).grid(column=0, row=6, pady=0, ipadx=0, ipady=0)
+#ttk.Button(frm, text="Delete Lot Number Files", command=deleteLots).grid(column=0, row=7, ipadx=0, ipady=0)
+#ttk.Label(frm, text="==========Debugging Tools===========").grid(column=0, row=5, ipadx=15, ipady=20)
 
+#TKinter Image
 photo = tk.PhotoImage(file='./image.png')
 smaller_image = photo.subsample(2, 2)
 image = ttk.Button(frm, image=smaller_image).grid(column=0, row=10, padx=0, pady=30)
 
 
 root.mainloop()
-    
+
 
 
