@@ -3,10 +3,12 @@ an excel spreadsheet according to lot number, automatically deleting entries tha
 
 Dependencies:
 Python 3.12 - https://www.python.org/downloads/
-
 OpenPyXL - pip install openpyxl
 pyqt5 - pip install pyqt5
 
+This program currently lives on the Dell Latitude 5400
+Username:CalebC@public.local
+Pass:Monkey
 
 Usage:
 Place new CSV files into the NewCSV folder
@@ -15,6 +17,9 @@ Number of CSV Files are shown, if the number is correct then click the combine f
 Warnings/Errors are displayed in terminal
 
 
-Warnings:
-Make sure master sheet is titled Sheet1, and make sure files are properly closed on system
-Make sure no excel spreadsheets are open
+Errors/Troubleshooting:
+	-File name constants should correctly match the file names
+	-Make sure no CSV files or spreadsheets are open in excel
+	-Strainrite sky folders should match file name constants in program
+
+
